@@ -12,6 +12,7 @@ SAMPLE_RATE = 16000
 openwakeword.utils.download_models()
 
 model = Model(
+    wakeword_models=["hey_jarvis"],
     inference_framework="onnx"
 )
 
@@ -51,10 +52,10 @@ while True:
         current_time = time.time()
 
         if (
-            score > 0.7 and
+            score > 0.1 and
             current_time - last_detection_time > cooldown_seconds
         ):
-
+            
             print(f"detected:{wakeword}")
             sys.stdout.flush()
 

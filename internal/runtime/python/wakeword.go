@@ -4,19 +4,42 @@ import (
 	"bufio"
 	"log"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"jarvis/internal/events"
+	"jarvis/internal/config"
 )
 
 func StartWakeWordRuntime(
 	bus *events.Bus,
 ) error {
 
+	root := config.JarvisRoot()
+
+	pythonPath := filepath.Join(
+		root,
+		"runtimes",
+		"wakeword",
+		"venv",
+		"Scripts",
+		"python.exe",
+	)
+
+	scriptPath := filepath.Join(
+		root,
+		"runtimes",
+		"wakeword",
+		"main.py",
+	)
+
+	log.Println("python:", pythonPath)
+	log.Println("script:", scriptPath)
+
 	cmd := exec.Command(
-		"runtimes/wakeword/venv/Scripts/python.exe",
+		pythonPath,
 		"-u",
-		"runtimes/wakeword/main.py",
+		scriptPath,
 	)
 
 	stdout, err := cmd.StdoutPipe()
@@ -53,11 +76,6 @@ func StartWakeWordRuntime(
 		for scanner.Scan() {
 
 			line := scanner.Text()
-
-			log.Println(
-				"[WAKEWORD]",
-				line,
-			)
 
 			if strings.HasPrefix(
 				line,

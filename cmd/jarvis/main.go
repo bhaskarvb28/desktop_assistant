@@ -1,16 +1,15 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
+	"jarvis/internal/audio/recording"
 	"jarvis/internal/events"
+	"jarvis/internal/orchestrator"
 	"jarvis/internal/runtime/python"
 )
 
 func main() {
-
-	fmt.Println("STARTED")
 
 	// --------------------------------------------------
 	// Event Bus
@@ -19,13 +18,20 @@ func main() {
 	bus := events.NewBus()
 
 	// --------------------------------------------------
-	// Register Event Handlers
+	// Orchestrator
 	// --------------------------------------------------
 
-	registerWakewordHandlers(bus)
+	orch := orchestrator.New(bus)
+	orch.Start()
 
 	// --------------------------------------------------
-	// Start Runtimes
+	// Modules
+	// --------------------------------------------------
+
+	recording.Register(bus)
+
+	// --------------------------------------------------
+	// Runtimes
 	// --------------------------------------------------
 
 	err := python.StartWakeWordRuntime(bus)
@@ -39,24 +45,4 @@ func main() {
 	// --------------------------------------------------
 
 	select {}
-}
-
-func registerWakewordHandlers(
-	bus *events.Bus,
-) {
-
-	wakewordChannel := bus.Subscribe(
-		events.WakewordDetected,
-	)
-
-	go func() {
-
-		for event := range wakewordChannel {
-
-			fmt.Println(
-				"[EVENT] Wakeword detected:",
-				event.Data,
-			)
-		}
-	}()
 }
