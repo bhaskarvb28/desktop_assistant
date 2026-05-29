@@ -3,46 +3,22 @@ package main
 import (
 	"log"
 
-	"jarvis/internal/audio/recording"
-	"jarvis/internal/events"
-	"jarvis/internal/orchestrator"
-	"jarvis/internal/runtime/python"
+	"jarvis/internal/bootstrap"
 )
 
 func main() {
-
-	// --------------------------------------------------
-	// Event Bus
-	// --------------------------------------------------
-
-	bus := events.NewBus()
-
-	// --------------------------------------------------
-	// Orchestrator
-	// --------------------------------------------------
-
-	orch := orchestrator.New(bus)
-	orch.Start()
-
-	// --------------------------------------------------
-	// Modules
-	// --------------------------------------------------
-
-	recording.Register(bus)
-
-	// --------------------------------------------------
-	// Runtimes
-	// --------------------------------------------------
-
-	err := python.StartWakeWordRuntime(bus)
+	
+	app, err := bootstrap.New()
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// --------------------------------------------------
-	// Block Forever
-	// --------------------------------------------------
+	err = app.Start()
 
-	select {}
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	app.Wait()
 }

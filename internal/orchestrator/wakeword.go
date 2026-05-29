@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"jarvis/internal/events"
+	"jarvis/internal/state"
 )
 
 func (o *Orchestrator) registerWakewordHandlers() {
@@ -19,6 +20,27 @@ func (o *Orchestrator) registerWakewordHandlers() {
 			log.Println(
 				"[ORCHESTRATOR] wakeword detected:",
 				event.Data,
+			)
+
+			// --------------------------------------------------
+			// Ignore if assistant busy
+			// --------------------------------------------------
+
+			if o.state.Get() != state.Idle {
+
+				log.Println(
+					"[ORCHESTRATOR] assistant busy",
+				)
+
+				continue
+			}
+
+			// --------------------------------------------------
+			// Transition State
+			// --------------------------------------------------
+
+			o.state.Set(
+				state.Listening,
 			)
 
 			// --------------------------------------------------
