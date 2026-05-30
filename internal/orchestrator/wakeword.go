@@ -7,50 +7,41 @@ import (
 	"jarvis/internal/state"
 )
 
-func (o *Orchestrator) registerWakewordHandlers() {
+func (o *Orchestrator) handleWakewordDetected(
+	event events.Event,
+) {
 
-	wakewordChannel := o.bus.Subscribe(
-		events.WakewordDetected,
+	log.Println(
+		"[ORCHESTRATOR] wakeword detected:",
+		event.Payload,
 	)
 
-	go func() {
+	// --------------------------------------------------
+	// Ignore if busy
+	// --------------------------------------------------
 
-		for event := range wakewordChannel {
+	if o.state.Get() != state.Idle {
 
-			log.Println(
-				"[ORCHESTRATOR] wakeword detected:",
-				event.Data,
-			)
+		log.Println(
+			"[ORCHESTRATOR] assistant busy",
+		)
 
-			// --------------------------------------------------
-			// Ignore if assistant busy
-			// --------------------------------------------------
+		return
+	}
 
-			if o.state.Get() != state.Idle {
+	// --------------------------------------------------
+	// Transition State
+	// --------------------------------------------------
 
-				log.Println(
-					"[ORCHESTRATOR] assistant busy",
-				)
+	o.state.Set(
+		state.Listening,
+	)
 
-				continue
-			}
+	// --------------------------------------------------
+	// Trigger Recording
+	// --------------------------------------------------
 
-			// --------------------------------------------------
-			// Transition State
-			// --------------------------------------------------
-
-			o.state.Set(
-				state.Listening,
-			)
-
-			// --------------------------------------------------
-			// Trigger Recording Workflow
-			// --------------------------------------------------
-
-			o.bus.Publish(events.Event{
-				Type: events.StartRecording,
-				Data: nil,
-			})
-		}
-	}()
+	o.bus.Publish(events.Event{
+		Type: events.StartRecording,
+	})
 }

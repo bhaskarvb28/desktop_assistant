@@ -1,53 +1,108 @@
 package events
 
-import "sync"
+import (
+	"sync"
+	"sync/atomic"
+)
 
 type Bus struct {
 	mu sync.RWMutex
 
-	subscribers map[EventType][]chan Event
+	nextID uint64
+
+	subscribers map[EventType]map[uint64]Handler
 }
 
 func NewBus() *Bus {
 
 	return &Bus{
 		subscribers: make(
-			map[EventType][]chan Event,
+			map[EventType]map[uint64]Handler,
 		),
 	}
 }
 
 func (b *Bus) Subscribe(
 	eventType EventType,
-) <-chan Event {
+	handler Handler,
+) *Subscription {
 
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	ch := make(chan Event, 10)
-
-	b.subscribers[eventType] = append(
-		b.subscribers[eventType],
-		ch,
+	id := atomic.AddUint64(
+		&b.nextID,
+		1,
 	)
 
-	return ch
+	if b.subscribers[eventType] == nil {
+
+		b.subscribers[eventType] = make(
+			map[uint64]Handler,
+		)
+	}
+
+	b.subscribers[eventType][id] = handler
+
+	return &Subscription{
+		ID:        id,
+		EventType: eventType,
+		Handler:   handler,
+	}
 }
 
-func (b *Bus) Publish(event Event) {
+func (b *Bus) Unsubscribe(
+	sub *Subscription,
+) {
+
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	handlers, exists := b.subscribers[sub.EventType]
+
+	if !exists {
+		return
+	}
+
+	delete(
+		handlers,
+		sub.ID,
+	)
+
+	if len(handlers) == 0 {
+
+		delete(
+			b.subscribers,
+			sub.EventType,
+		)
+	}
+}
+
+func (b *Bus) Publish(
+	event Event,
+) {
 
 	b.mu.RLock()
-	defer b.mu.RUnlock()
 
-	for _, ch := range b.subscribers[event.Type] {
+	handlersMap := b.subscribers[event.Type]
 
-		select {
+	handlers := make(
+		[]Handler,
+		0,
+		len(handlersMap),
+	)
 
-		case ch <- event:
+	for _, handler := range handlersMap {
+		handlers = append(
+			handlers,
+			handler,
+		)
+	}
 
-		default:
-			// subscriber is slow
-			// skip event
-		}
+	b.mu.RUnlock()
+
+	for _, handler := range handlers {
+
+		go handler(event)
 	}
 }

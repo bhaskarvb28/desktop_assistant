@@ -89,7 +89,7 @@ func StartWakeWordRuntime(
 
 				bus.Publish(events.Event{
 					Type: events.WakewordDetected,
-					Data: wakeword,
+					Payload: wakeword,
 				})
 			}
 		}

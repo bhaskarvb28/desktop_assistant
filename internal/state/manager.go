@@ -1,8 +1,8 @@
 package state
 
 import (
-	"log"
 	"sync"
+	"log"
 )
 
 type Manager struct {

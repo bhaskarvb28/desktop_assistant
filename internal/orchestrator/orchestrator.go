@@ -6,8 +6,7 @@ import (
 )
 
 type Orchestrator struct {
-	bus *events.Bus
-
+	bus   *events.Bus
 	state *state.Manager
 }
 
@@ -17,12 +16,12 @@ func New(
 ) *Orchestrator {
 
 	return &Orchestrator{
-		bus: bus,
+		bus:   bus,
 		state: stateManager,
 	}
 }
 
 func (o *Orchestrator) Start() {
 
-	o.registerWakewordHandlers()
+	o.registerHandlers()
 }
