@@ -13,4 +13,9 @@ func (o *Orchestrator) registerHandlers() {
 		events.RecordingFinished,
 		o.handleRecordingFinished,
 	)
+
+	o.bus.Subscribe(
+		events.TranscriptionCompleted,
+		o.handleTranscriptionCompleted,
+	)
 }

@@ -2,6 +2,8 @@ package bootstrap
 
 import (
 	// "jarvis/internal/audio/recording"
+	"jarvis/internal/audio/recording"
+	"jarvis/internal/audio/stt"
 	"jarvis/internal/events"
 	"jarvis/internal/orchestrator"
 	"jarvis/internal/runtime/python"
@@ -39,7 +41,11 @@ func (a *App) Start() error {
 
 	// modules
 	// When this scales need separate modules.go
-	// recording.Register(a.bus)
+	recordingModule := recording.New(a.bus)
+	recordingModule.Start()
+
+	sttModule := stt.New(a.bus)
+	sttModule.Start()
 
 	// runtimes
 	// When this scales need separate modules.go
